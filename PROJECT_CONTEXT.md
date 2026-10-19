@@ -80,6 +80,8 @@ sorted edge list (`st.cache_data`) so tab changes and stepping never recompute t
 
 ## 6. Pending
 
+Full task list with owners: see [REMAINING_WORK.md](REMAINING_WORK.md).
+
 - Deploy to Streamlit Community Cloud and put the public link in README (Arjun); pin versions at that point.
 - Manual interface checklist: sample → MST in ≤ 3 clicks, CSV errors visible, step-through (see section 7).
 - Report (PDF) and slides: proofs of cut/cycle properties, complexity write-up, worked example (all three; Saiyam compiles).
@@ -110,3 +112,4 @@ Workflow: feature branches, PR to `main`, one second reviewer per module, CI mus
 
 - 2026-10-19 — First end-to-end version: core, services, app, tests, docs (PR #1, merged to `main`, CI green).
 - 2026-10-19 — Working agreement: Claude does not wait for approval on routine work; it opens a PR, waits for green CI, and merges it, then records the change here. Deploying to Streamlit Cloud needs a team member's own account, so that stays with Arjun.
+- 2026-10-19 — Added `REMAINING_WORK.md` listing what is left, with owners.
