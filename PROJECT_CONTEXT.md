@@ -1,7 +1,7 @@
 # PROJECT_CONTEXT — NetGraph Analyzer
 
 > Living document. Update it with every meaningful change (what was built, what is pending, decisions).
-> Last updated: 2026-10-19 · Branch `feature/netgraph-analyzer`
+> Last updated: 2026-10-19 · First version merged to `main` (PR #1)
 
 ## 1. What this project is
 
@@ -108,4 +108,5 @@ Workflow: feature branches, PR to `main`, one second reviewer per module, CI mus
 
 ## 9. Change log
 
-- 2026-10-19 — First end-to-end version: core, services, app, tests, docs (branch `feature/netgraph-analyzer`).
+- 2026-10-19 — First end-to-end version: core, services, app, tests, docs (PR #1, merged to `main`, CI green).
+- 2026-10-19 — Working agreement: Claude does not wait for approval on routine work; it opens a PR, waits for green CI, and merges it, then records the change here. Deploying to Streamlit Cloud needs a team member's own account, so that stays with Arjun.
