@@ -1,0 +1,13 @@
+source,target,weight
+CR,FW,4
+CR,SA,3
+CR,SB,5
+FW,WS,6
+SA,SB,2
+SA,WS,7
+SA,DB,8
+SB,DB,4
+WS,DB,3
+SB,LS,6
+SA,LS,9
+LS,AP,2
