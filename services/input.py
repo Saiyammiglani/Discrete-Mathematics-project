@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from core.graph import Graph, fmt_weight
+from services.scenarios import MPSTME_SAMPLE, MPSTME_POS, MPSTME_FACILITIES
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 MAX_BYTES = 1_000_000          # 1 MB upload cap
@@ -20,16 +21,14 @@ TEMPLATE_CSV = "source,target,weight\nA,B,4\nB,C,2\nA,C,5\n"
 
 # Hand-placed coordinates so drawings match the report.
 SAMPLES: dict[str, dict] = {
+    MPSTME_SAMPLE: {
+        "file": "mpstme_mumbai.csv", "pos": MPSTME_POS,
+        "facilities": MPSTME_FACILITIES,
+    },
     "Office network (8 devices)": {
         "file": "office_8.csv",
         "pos": {"CR": (0.0, 0.0), "FW": (-1.2, 1.4), "SA": (1.2, 0.2), "SB": (1.4, -1.6),
                 "WS": (-0.4, 2.6), "DB": (2.6, 0.9), "LS": (0.2, -2.8), "AP": (-1.4, -3.2)},
-    },
-    "Campus network (12 devices)": {
-        "file": "campus_12.csv",
-        "pos": {"GW": (-3.0, 1.0), "FW": (-1.8, 1.0), "CORE1": (-0.4, 1.8), "CORE2": (-0.4, 0.0),
-                "LIB": (1.2, 2.6), "ADM": (2.4, 1.6), "HST1": (3.6, 2.4), "HST2": (3.2, 3.6),
-                "LAB1": (1.0, -0.8), "LAB2": (2.2, 0.2), "DC": (1.2, -2.2), "WIFI": (3.2, -1.2)},
     },
 }
 

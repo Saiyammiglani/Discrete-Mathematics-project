@@ -5,7 +5,7 @@ import pytest
 from streamlit.testing.v1 import AppTest
 
 from core.graph import Graph
-from services.analysis import analyze, comparison_rows, networkx_check, same_edge_set
+from services.analysis import analyze, comparison_rows, networkx_check, same_edge_set, mst_graph
 from services.export import figure_png, mst_csv
 from services.input import SAMPLES, load_sample, parse_csv
 from viz.draw import draw_graph, layout
@@ -69,6 +69,46 @@ def test_draw_all_styles():
     assert fig.axes
 
 
+def test_mst_csv_preserves_quoted_names_and_precise_weights():
+    g = Graph([('Lab, North', 'Room "A"', 1.2345678901234567),
+               ('Room "A"', 'Room\nB', 0.000000123456789)])
+    exported = mst_csv(analyze(g).kruskal.edges)
+    result = parse_csv(exported)
+    assert result.ok
+    assert [(e.key, e.w) for e in result.graph.edges()] == [(e.key, e.w) for e in g.edges()]
+
+
+@pytest.mark.parametrize("illustrated", [False, True])
+def test_current_rejected_cable_stays_red_and_outside_tree(illustrated):
+    from matplotlib.colors import to_rgba
+    from services.scenarios import MPSTME_SAMPLE
+    from viz.draw import RED
+    meta = SAMPLES[MPSTME_SAMPLE]
+    g = load_sample(MPSTME_SAMPLE).graph
+    trace = analyze(g, "LIB").kruskal.steps[:5]
+    accepted = [s.edge.key for s in trace if s.action == "ACCEPT"]
+    rejected = [s.edge.key for s in trace if s.action == "REJECT"]
+    current = trace[-1].edge.key
+    assert current == ("LIB", "ROB") and current not in accepted
+    fig = draw_graph(g, layout(g, meta["pos"]), tree=accepted,
+                     rejected=rejected, current=current,
+                     facilities=meta["facilities"] if illustrated else None)
+    cable_index = [e.key for e in g.edges()].index(current)
+    cable = fig.axes[0].lines[cable_index]
+    assert to_rgba(cable.get_color()) == to_rgba("#c33e4a" if illustrated else RED)
+    assert cable.get_linestyle() in (":", "--")
+    if illustrated:
+        legend = [t.get_text() for t in fig.axes[0].get_legend().get_texts()]
+        assert "Rejected cable (not selected)" in legend
+        assert "Current step" not in legend
+    selected_only = draw_graph(g, layout(g, meta["pos"]), tree=accepted,
+                               show_unused=False, weight_label=lambda w: f"COST:{w}",
+                               facilities=meta["facilities"] if illustrated else None)
+    labels = [t.get_text() for t in selected_only.axes[0].texts if t.get_text().startswith("COST:")]
+    assert len(labels) == 4
+    assert all(l.get_linestyle() == "-" for l in selected_only.axes[0].lines[:4])
+
+
 def test_layout_falls_back_to_spring():
     g = Graph([("A", "B", 1), ("B", "C", 1)])
     assert set(layout(g, {"X": (0, 0)})) == {"A", "B", "C"}
@@ -83,8 +123,8 @@ def test_app_loads_sample_and_shows_mst():
     at = app()
     assert not at.exception
     vals = {m.label: m.value for m in at.metric}
-    assert vals["Full network cost"] == "59" and vals["MST cost"] == "24"
-    assert [t.label for t in at.tabs] == ["Graph properties", "Kruskal and Prim", "Compare", "Vulnerability"]
+    assert vals["Full network cost"] == "₹38,000" and vals["MST cost"] == "₹16,000"
+    assert [t.label for t in at.tabs] == ["Network", "Algorithms", "Costs", "Failures"]
 
 
 def test_app_prim_and_step_buttons():
@@ -94,10 +134,69 @@ def test_app_prim_and_step_buttons():
     nxt = [b for b in at.button if "Next" in b.label][0]
     nxt.click().run()
     assert not at.exception and at.session_state["step"] == 2
-
-
-def test_app_campus_sample():
-    at = app()
-    at.sidebar.selectbox[0].set_value("Campus network (12 devices)").run()
+    at.slider[0].set_value(5).run()
     assert not at.exception
-    assert {m.label: m.value for m in at.metric}["Devices"] == "12"
+    assert any("Prim finished: 5 edges, total cost ₹16,000." in s.value for s in at.caption)
+
+
+def test_mpstme_known_answer_and_cable_failure():
+    from services.scenarios import MPSTME_SAMPLE
+    g = load_sample(MPSTME_SAMPLE).graph
+    a = analyze(g, "LIB")
+    assert len(g) == 6 and len(g.edges()) == 9
+    assert (a.full_total, a.mst_total, a.saving) == (38, 16, 22)
+    assert a.same_total and not a.bridges and not a.cut_vertices
+    assert len(a.mst_bridges) == 5
+    from core.vulnerability import failure_test
+    full = failure_test(g, edge=("ROB", "RES"))
+    tree = failure_test(mst_graph(g, a.kruskal), edge=("ROB", "RES"))
+    assert full.connected and tree.split
+    assert tree.components == [["ARVR", "LIB", "ROB", "TELE"], ["PRINT", "RES"]]
+    assert [(s.edge.key, s.action) for s in a.kruskal.steps] == [
+        (("ARVR", "ROB"), "ACCEPT"), (("ARVR", "TELE"), "ACCEPT"),
+        (("PRINT", "RES"), "ACCEPT"), (("ARVR", "LIB"), "ACCEPT"),
+        (("LIB", "ROB"), "REJECT"), (("RES", "ROB"), "ACCEPT"),
+    ]
+    assert {e.key for e in a.kruskal.edges} == {e.key for e in a.prim.edges}
+
+
+def test_mpstme_scenes_export_and_failed_switch():
+    from services.scenarios import MPSTME_SAMPLE
+    meta = SAMPLES[MPSTME_SAMPLE]
+    g = load_sample(MPSTME_SAMPLE).graph
+    positions = layout(g, meta["pos"], facility_mode=True)
+    before = set(g.vertices)
+    h = g.copy()
+    h.remove_vertex("ROB")
+    fig = draw_graph(h, positions, facilities=meta["facilities"],
+                     components=h.components(), failed_vertices=["ROB"])
+    texts = [t.get_text() for t in fig.axes[0].texts]
+    assert "Library" in texts and "Robotics Lab" in texts
+    assert any("SWITCH FAILED" in text for text in texts)
+    assert len(fig.axes[0].patches) > 60  # equipment, furniture and switch scenes
+    assert figure_png(fig, dpi=60).startswith(b"\x89PNG")
+    assert set(g.vertices) == before and g.has_edge("ROB", "RES")
+
+
+def test_facility_layout_keeps_room_spacing_after_custom_edits():
+    from services.scenarios import MPSTME_SAMPLE
+    meta = SAMPLES[MPSTME_SAMPLE]
+    g = load_sample(MPSTME_SAMPLE).graph
+    g.add_edge("LIB", "NEW", 2)
+    positions = layout(g, meta["pos"], facility_mode=True)
+    assert positions["LIB"] == meta["pos"]["LIB"]
+    assert set(positions) == set(g.vertices)
+    assert all(abs(positions["NEW"][1] - pos[1]) >= 4.2 for pos in meta["pos"].values())
+
+
+def test_app_mpstme_failure_scene_and_generic_sample():
+    at = app()
+    remove = next(r for r in at.radio if r.label == "Remove a")
+    remove.set_value("link").run()
+    assert not at.exception
+    assert any("2 disconnected groups" in e.value for e in at.error)
+    assert any("**Group 2:** 3-D Printing Lab, Research Lab" in m.value for m in at.markdown)
+    at.sidebar.selectbox[0].set_value("Office network (8 devices)").run()
+    assert not at.exception
+    vals = {m.label: m.value for m in at.metric}
+    assert vals["Full network cost"] == "59" and vals["MST cost"] == "24"

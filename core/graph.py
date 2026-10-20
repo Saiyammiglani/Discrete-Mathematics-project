@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 def fmt_weight(w: float) -> str:
     """Show whole numbers without a trailing '.0' (3.0 -> '3', 2.5 -> '2.5')."""
-    return str(int(w)) if float(w).is_integer() else f"{w:g}"
+    return str(int(w)) if float(w).is_integer() else str(w)
 
 
 @dataclass(frozen=True)

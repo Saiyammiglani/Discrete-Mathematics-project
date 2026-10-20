@@ -1,0 +1,35 @@
+/* A compact, neutral workbench. Colour is reserved for selection and failures. */
+.stApp { font-family: "Segoe UI", Arial, sans-serif; }
+.stMainBlockContainer { max-width: 1440px; padding: 2.25rem 3rem 3rem; }
+h1 { font-size: 2rem !important; font-weight: 600 !important; letter-spacing: -.035em; padding-bottom: .2rem !important; }
+h2 { font-size: 1.25rem !important; font-weight: 600 !important; }
+h3 { font-size: 1.05rem !important; font-weight: 600 !important; }
+[data-testid="stSidebar"] { border-right: 1px solid #dcded6; }
+[data-testid="stSidebar"] h1 { font-size: 1.35rem !important; letter-spacing: -.03em; }
+[data-testid="stSidebarUserContent"] { padding: 2rem 1.3rem; }
+[data-testid="stCaptionContainer"] { color: #6c746c; }
+[data-testid="stMetricValue"] { font-size: 1.55rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+[data-testid="stMetricLabel"] { color: #687167; font-size: .8rem; }
+[data-testid="stMetricDelta"] { font-size: .75rem; }
+[data-testid="stImage"] { border: 1px solid #e0e3db; border-radius: 3px; overflow: hidden; }
+[data-testid="stImage"] img { display: block; }
+[data-testid="stExpander"] { border-radius: 3px; border-color: #dfe2d9; box-shadow: none; }
+[data-testid="stExpander"] summary { font-size: .86rem; }
+[data-testid="stButton"] button,
+[data-testid="stDownloadButton"] button { border-radius: 3px; font-size: .82rem; font-weight: 500; box-shadow: none; }
+[data-testid="stButton"] button p,
+[data-testid="stDownloadButton"] button p { font-size: .82rem; }
+[data-testid="stTabs"] [role="tablist"] { gap: 1.7rem; border-bottom: 1px solid #dcded6; margin-bottom: 1rem; }
+[data-testid="stTabs"] [role="tab"] { font-size: .86rem; padding: .7rem 0; }
+[data-testid="stTabs"] [role="tab"] p { font-size: .86rem; }
+[data-testid="stTabs"] [role="tab"][aria-selected="true"] { color: #28594b; font-weight: 600; }
+[data-testid="stAlert"] { border-radius: 3px; font-size: .86rem; }
+[data-testid="stDataFrame"] { border: 1px solid #e0e3db; border-radius: 3px; }
+[data-testid="stHorizontalBlock"] { gap: 1.3rem; }
+[data-testid="stAppDeployButton"] { display: none; }
+@media (max-width: 700px) {
+  .stMainBlockContainer { padding: 1.2rem 1rem 2rem; }
+  h1 { font-size: 1.65rem !important; }
+  [data-testid="stTabs"] [role="tablist"] { gap: 1.1rem; }
+  [data-testid="stMetricValue"] { font-size: 1.3rem; }
+}
